@@ -81,3 +81,90 @@
 	background: #e9ecef;
 	color: #0a58ca;
 }
+
+/* 設定アイコン */
+#settingsBtn {
+	position: fixed;
+	top: 16px;
+	right: 16px;
+	cursor: pointer;
+}
+
+#settingsBtn .material-icons {
+	font-size: 20px;
+}
+
+/* 設定パネル */
+#settingsPanel {
+	padding: 8px 12px 8px 24px;
+}
+
+/* テンプレート設定 */
+#templateSettings {
+	margin-bottom: 16px;
+}
+
+.template-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.template-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.template-item input {
+	border: none;
+	background: none;
+	padding: 4px;
+	font-size: 14px;
+}
+
+.template-item input:focus {
+	outline: none;
+	background: #f8f9fa;
+}
+
+.template-item input[type="text"] {
+	width: 200px;
+}
+
+.template-item input[type="url"] {
+	flex: 1;
+}
+
+.template-remove {
+	cursor: pointer;
+	opacity: 0.5;
+}
+
+.template-remove:hover {
+	opacity: 1;
+}
+
+.template-add {
+	margin-top: 8px;
+	cursor: pointer;
+	opacity: 0.5;
+	display: inline-flex;
+	align-items: center;
+}
+
+.template-add:hover {
+	opacity: 1;
+}
+
+.form-check {
+	margin-bottom: 8px;
+}
+
+.form-select-sm {
+	margin: 0 0 8px 24px;
+	width: auto;
+	min-width: 100px;
+	padding: 2px 24px 2px 8px;
+	height: 24px;
+}

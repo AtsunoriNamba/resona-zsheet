@@ -1,12 +1,16 @@
 window.onload = async function(){
 	ZOHO.embeddedApp.on("PageLoad", async function(data){
-		let orgInfo = await ZOHO.CRM.CONFIG.getOrgInfo()
+		debugger
+		WidgetKey = `${data.Entity}_${data.ButtonPosition}`
+		const orgInfo = await ZOHO.CRM.CONFIG.getOrgInfo()
 		const orgId = orgInfo.org[0].zgid
 		ApiDomain = orgId == PRDUCTION_ORGID ? "https://www.zohoapis.jp" : "https://crmsandbox.zoho.jp"
 
 		fileNameAddition = orgId == PRDUCTION_ORGID ? "" : "（テスト）"
 		widgetData = data
 
+		await loadWidgetSettings(WidgetKey)
+		TEMPLATE_CRMVAR = 
 		await waitFor("#loadCheck")
 
 		let templateUrl
@@ -14,42 +18,21 @@ window.onload = async function(){
 		// debugger
 		document.querySelector("#operation-ui").style.display = "block"
 
-		templateUrl = await ZOHO.CRM.API.getOrgVariable(TEMPLATE_CRMVAR)
-		if(!templateUrl.Success){
-			alert("テンプレートURLが設定されていません。")
-			ZOHO.CRM.UI.Popup.close()
-			return
-		}
-		templateSelectoerSetup(templateUrl.Success.Content, document.querySelector("#invTemplateSelect"))
+
+		templateSelectoerSetup(SETTINGS.SheetTemplateUrl, document.querySelector("#invTemplateSelect"))
 
 
 		function templateSelectoerSetup(v, elm){
-			// debugger
+			debugger
 			let variable = v
 			let zTemplateName
 			let templateOptionHtml = ""
-			if(variable.match(/\n/g)){
-				let templateUrlArray = variable.split("\n")
-				for(let url of templateUrlArray){
-					zTemplateName = url.split("#").shift()
-					zSheetTemplate = url.split("/").pop()
-					if(zSheetTemplate.match(/\?/g)){
-						zSheetTemplate = zSheetTemplate.split("?").shift()
-					}
-					
-					templateOptionHtml += `<option value="${zSheetTemplate}">${zTemplateName}</option>`
-				}
-				elm.innerHTML = templateOptionHtml
-			}else{
-				zTemplateName = variable.split("#").shift()
-				zSheetTemplate = variable.split("/").pop()
-				if(zSheetTemplate.match(/\?/g)){
-					zSheetTemplate = zSheetTemplate.split("?").shift()
-				}
-				templateOptionHtml += `<option value="${zSheetTemplate}" selected>${zTemplateName}</option>`
-				elm.innerHTML = templateOptionHtml
-				elm.disabled = true
+			for(let entry of v){
+				zTemplateName = entry.name
+				zSheetTemplate = entry.url
+				templateOptionHtml += `<option value="${zSheetTemplate}">${zTemplateName}</option>`
 			}
+			elm.innerHTML = templateOptionHtml
 		}
 		
 		ZOHO.CRM.UI.Resize({height:"200", width:"540"})
@@ -108,6 +91,8 @@ window.onload = async function(){
 	async function createZohoSheetDocuments(data){
 		// プログレスバーの初期化
 		initProgress(data.EntityId.length)
+
+
 
 		document.getElementById("generateBtnText").style.display = "none"
 		document.getElementById("generateBtnInProgress").style.display = "block"

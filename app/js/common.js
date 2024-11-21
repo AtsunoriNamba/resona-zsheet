@@ -1,6 +1,6 @@
 /*
- * Version: 1.3.7
- * Update: 設定項目のレイアウトを横並びに変更
+ * Version: 1.3.8
+ * Update: 設定パネルの開閉制御を修正
  */
 
 let ENTITY
@@ -45,6 +45,7 @@ let WidgetKey
 function initializeSettingsUI() {
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsPanel = document.getElementById('settingsPanel');
+    const settingsCloseBtn = document.getElementById('settingsCloseBtn');
     const operationUI = document.getElementById('operation-ui');
     const progress = document.getElementById('progress');
     
@@ -181,17 +182,24 @@ function initializeSettingsUI() {
         renderTemplateList();
     });
 
+    // 設定パネルを開く
+    function openSettingsPanel() {
+        settingsPanel.style.display = 'block';
+        operationUI.style.display = 'none';
+        settingsBtn.style.display = 'none';
+    }
+
+    // 設定パネルを閉じる
+    function closeSettingsPanel() {
+        settingsPanel.style.display = 'none';
+        operationUI.style.display = 'flex';
+        settingsBtn.style.display = 'flex';
+    }
+
     // 設定パネルの開閉制御
-    settingsBtn.addEventListener('click', () => {
-        const isSettingsVisible = settingsPanel.style.display === 'block';
-        if (isSettingsVisible) {
-            settingsPanel.style.display = 'none';
-            operationUI.style.display = 'flex';
-        } else {
-            settingsPanel.style.display = 'block';
-            operationUI.style.display = 'none';
-        }
-    });
+    settingsBtn.addEventListener('click', openSettingsPanel);
+    settingsCloseBtn.addEventListener('click', closeSettingsPanel);
+
     renderTemplateList();
 }
 

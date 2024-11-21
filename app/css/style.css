@@ -99,6 +99,7 @@
 	align-items: center;
 	justify-content: center;
 	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	z-index: 1;
 }
 
 #settingsBtn .material-icons {
@@ -111,11 +112,39 @@
 
 /* 設定パネル */
 #settingsPanel {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	padding: 16px;
-	margin: 16px;
-	border: 1px #ccc solid;
-	border-radius: 4px;
+	margin: 0;
 	background: #fff;
+	z-index: 2;
+	overflow-y: auto;
+}
+
+#settingsHeader {
+	position: sticky;
+	top: 0;
+	left: 0;
+	padding: 8px;
+	background: #fff;
+	border-bottom: 1px solid #eee;
+	margin-bottom: 16px;
+}
+
+#settingsCloseBtn {
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+	color: #666;
+}
+
+#settingsCloseBtn:hover {
+	background: #f8f9fa;
+	color: #333;
 }
 
 .setting-field {

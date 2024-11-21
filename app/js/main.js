@@ -1,6 +1,6 @@
 window.onload = async function(){
 	ZOHO.embeddedApp.on("PageLoad", async function(data){
-		debugger
+		// debugger
 		WidgetKey = `${data.Entity}_${data.ButtonPosition}`
 		const orgInfo = await ZOHO.CRM.CONFIG.getOrgInfo()
 		const orgId = orgInfo.org[0].zgid
@@ -23,7 +23,7 @@ window.onload = async function(){
 
 
 		function templateSelectoerSetup(v, elm){
-			debugger
+			// debugger
 			let variable = v
 			let zTemplateName
 			let templateOptionHtml = ""
@@ -91,8 +91,6 @@ window.onload = async function(){
 	async function createZohoSheetDocuments(data){
 		// プログレスバーの初期化
 		initProgress(data.EntityId.length)
-
-
 
 		document.getElementById("generateBtnText").style.display = "none"
 		document.getElementById("generateBtnInProgress").style.display = "block"

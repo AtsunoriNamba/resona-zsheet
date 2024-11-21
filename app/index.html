@@ -30,6 +30,9 @@
 				</div>
 			</button>
 		</div>
+		<div id="progress" class="progress">
+			<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
 	</div>
 
 	<div id="settingsPanel" style="display:none;">
@@ -39,36 +42,9 @@
 				<span class="material-icons">add</span>
 			</div>
 		</div>
-
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="attachToRecord">
-			<label class="form-check-label" for="attachToRecord">データに添付</label>
-		</div>
-		<select class="form-select form-select-sm" id="attachFormat" style="display:none;">
-			<option value="pdf">PDF</option>
-			<option value="xlsx">Excel</option>
-			<option value="url">URL</option>
-		</select>
-
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="download">
-			<label class="form-check-label" for="download">ダウンロード</label>
-		</div>
-		<select class="form-select form-select-sm" id="downloadFormat" style="display:none;">
-			<option value="pdf">PDF</option>
-			<option value="xlsx">Excel</option>
-			<option value="url">URL</option>
-		</select>
-
-		<div class="form-check" id="createAsSheetsGroup">
-			<input type="checkbox" class="form-check-input" id="createAsSheets">
-			<label class="form-check-label" for="createAsSheets">シートとして作成</label>
-		</div>
 	</div>
 
-	<div id="progress" class="progress">
-		<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-	</div>
+
 	<div id="workbookLinks"></div>
 	<div id="closeBtnArea" class="closeBtnArea" style="display:none;">
 		<button id="closeBtn" class="btn btn-primary ms-3">閉じる</button>

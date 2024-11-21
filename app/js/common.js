@@ -1,6 +1,6 @@
 /*
- * Version: 1.3.1
- * Update: SheetTemplateUrlの初期化処理を追加
+ * Version: 1.3.7
+ * Update: 設定項目のレイアウトを横並びに変更
  */
 
 let ENTITY
@@ -25,12 +25,16 @@ let worksheetContents = []
 
 let SETTINGS = {
 	"productionOrgId": '',
-	"attachToRecord": false,
-	"attachFormat": 'pdf',
-	"download": false,
-	"downloadFormat": 'pdf',
-	"createAsSheets": false,
-	"SheetTemplateUrl": [{name:'', url:''}]
+	"SheetTemplateUrl": [
+        {
+            "name":'',
+            "url":'',
+            "attachToRecord": false,
+            "attachFormat": 'pdf',
+            "download": false,
+            "downloadFormat": 'pdf',
+        }
+    ]
 }
 
 let gather
@@ -44,12 +48,6 @@ function initializeSettingsUI() {
     const operationUI = document.getElementById('operation-ui');
     const progress = document.getElementById('progress');
     
-    const attachToRecord = document.getElementById('attachToRecord');
-    const attachFormat = document.getElementById('attachFormat');
-    const download = document.getElementById('download');
-    const downloadFormat = document.getElementById('downloadFormat');
-    const createAsSheetsGroup = document.getElementById('createAsSheetsGroup');
-    const createAsSheets = document.getElementById('createAsSheets');
     const templateList = document.querySelector('.template-list');
     const templateAdd = document.querySelector('.template-add');
 
@@ -62,21 +60,53 @@ function initializeSettingsUI() {
     // テンプレート一覧の生成
     function renderTemplateList() {
         templateList.innerHTML = '';
-        if (!Array.isArray(SETTINGS.SheetTemplateUrl)) {
-            SETTINGS.SheetTemplateUrl = [{name:'', url:''}];
-        }
         SETTINGS.SheetTemplateUrl.forEach((template, index) => {
             const item = document.createElement('div');
             item.className = 'template-item';
+            item.id = `template-item-${index}`;
             item.innerHTML = `
-                <input type="text" placeholder="テンプレート名" value="${template.name || ''}" data-index="${index}" data-field="name">
-                <input type="url" placeholder="URL" value="${template.url || ''}" data-index="${index}" data-field="url">
-                <span class="material-icons template-remove" data-index="${index}">remove_circle_outline</span>
+            <div class="itemsettings">
+                <div class="itemsettings-template">
+                    <input type="text" placeholder="テンプレート名" value="${template.name || ''}" data-index="${index}" data-field="name">
+                    <input type="url" placeholder="URL" value="${template.url || ''}" data-index="${index}" data-field="url">
+                </div>
+                <div class="itemsettings-postprocesses">
+                    <div class="postprocess-label">作成後の処理</div>
+                    <div class="postprocess-fields">
+                        <div class="setting-field">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="attachToRecord-${index}" ${template.attachToRecord ? 'checked' : ''}>
+                                <label class="form-check-label" for="attachToRecord-${index}">データに添付</label>
+                            </div>
+                            <select class="form-select form-select-sm" id="attachFormat-${index}" style="display:${template.attachToRecord ? 'block' : 'none'};">
+                                <option value="pdf" ${template.attachFormat === 'pdf' ? 'selected' : ''}>PDF</option>
+                                <option value="excel" ${template.attachFormat === 'excel' ? 'selected' : ''}>Excel</option>
+                                <option value="zohosheet" ${template.attachFormat === 'zohosheet' ? 'selected' : ''}>ZohoSheet</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-field">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="download-${index}" ${template.download ? 'checked' : ''}>
+                                <label class="form-check-label" for="download-${index}">ダウンロード</label>
+                            </div>
+                            <select class="form-select form-select-sm" id="downloadFormat-${index}" style="display:${template.download ? 'block' : 'none'};">
+                                <option value="pdf" ${template.downloadFormat === 'pdf' ? 'selected' : ''}>PDF</option>
+                                <option value="excel" ${template.downloadFormat === 'excel' ? 'selected' : ''}>Excel</option>
+                                <option value="excel_combined" ${template.downloadFormat === 'excel_combined' ? 'selected' : ''}>Excel（1ブックにまとめる）</option>
+                                <option value="zohosheet" ${template.downloadFormat === 'zohosheet' ? 'selected' : ''}>ZohoSheet</option>
+                                <option value="zohosheet_combined" ${template.downloadFormat === 'zohosheet_combined' ? 'selected' : ''}>ZohoSheet（1ブックにまとめる）</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <span class="material-icons template-remove" data-index="${index}">remove_circle_outline</span>
             `;
             templateList.appendChild(item);
 
             // 入力値の変更を監視
-            item.querySelectorAll('input').forEach(input => {
+            item.querySelectorAll('input[type="text"], input[type="url"]').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const index = parseInt(e.target.dataset.index);
                     const field = e.target.dataset.field;
@@ -85,12 +115,51 @@ function initializeSettingsUI() {
                 });
             });
 
+            // チェックボックスの変更を監視
+            const attachToRecord = document.getElementById(`attachToRecord-${index}`);
+            const attachFormat = document.getElementById(`attachFormat-${index}`);
+            const download = document.getElementById(`download-${index}`);
+            const downloadFormat = document.getElementById(`downloadFormat-${index}`);
+
+            // データに添付の制御
+            attachToRecord.addEventListener('change', (e) => {
+                SETTINGS.SheetTemplateUrl[index].attachToRecord = e.target.checked;
+                attachFormat.style.display = e.target.checked ? 'block' : 'none';
+                saveWidgetSettings(WidgetKey);
+            });
+
+            // 添付形式の制御
+            attachFormat.addEventListener('change', (e) => {
+                SETTINGS.SheetTemplateUrl[index].attachFormat = e.target.value;
+                saveWidgetSettings(WidgetKey);
+            });
+
+            // ダウンロードの制御
+            download.addEventListener('change', (e) => {
+                SETTINGS.SheetTemplateUrl[index].download = e.target.checked;
+                downloadFormat.style.display = e.target.checked ? 'block' : 'none';
+                saveWidgetSettings(WidgetKey);
+            });
+
+            // ダウンロード形式の制御
+            downloadFormat.addEventListener('change', (e) => {
+                SETTINGS.SheetTemplateUrl[index].downloadFormat = e.target.value;
+                saveWidgetSettings(WidgetKey);
+            });
+
             // 削除ボタンの処理
             item.querySelector('.template-remove').addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 SETTINGS.SheetTemplateUrl.splice(index, 1);
                 if (SETTINGS.SheetTemplateUrl.length === 0) {
-                    SETTINGS.SheetTemplateUrl.push({name:'', url:''});
+                    SETTINGS.SheetTemplateUrl.push({
+                        "name":'',
+                        "url":'',
+                        "attachToRecord": false,
+                        "attachFormat": 'pdf',
+                        "download": false,
+                        "downloadFormat": 'pdf',
+                    });
                 }
                 saveWidgetSettings(WidgetKey);
                 renderTemplateList();
@@ -100,36 +169,17 @@ function initializeSettingsUI() {
 
     // テンプレート追加ボタンの処理
     templateAdd.addEventListener('click', () => {
-        SETTINGS.SheetTemplateUrl.push({name:'', url:''});
+        SETTINGS.SheetTemplateUrl.push({
+            "name":'',
+            "url":'',
+            "attachToRecord": false,
+            "attachFormat": 'pdf',
+            "download": false,
+            "downloadFormat": 'pdf',
+        });
         saveWidgetSettings(WidgetKey);
         renderTemplateList();
     });
-
-    // 設定値をUIに反映
-    function updateUI() {
-        attachToRecord.checked = SETTINGS.attachToRecord;
-        attachFormat.value = SETTINGS.attachFormat;
-        download.checked = SETTINGS.download;
-        downloadFormat.value = SETTINGS.downloadFormat;
-        createAsSheets.checked = SETTINGS.createAsSheets;
-
-        // 添付形式の表示制御
-        attachFormat.style.display = SETTINGS.attachToRecord ? 'block' : 'none';
-
-        // ダウンロード形式の表示制御
-        downloadFormat.style.display = SETTINGS.download ? 'block' : 'none';
-
-        // シートとして作成の表示制御
-        const showCreateAsSheets = SETTINGS.download && SETTINGS.downloadFormat !== 'pdf';
-        createAsSheetsGroup.style.display = showCreateAsSheets ? 'block' : 'none';
-        if (!showCreateAsSheets) {
-            createAsSheets.checked = false;
-            SETTINGS.createAsSheets = false;
-        }
-
-        // テンプレート一覧の更新
-        renderTemplateList();
-    }
 
     // 設定パネルの開閉制御
     settingsBtn.addEventListener('click', () => {
@@ -137,45 +187,12 @@ function initializeSettingsUI() {
         if (isSettingsVisible) {
             settingsPanel.style.display = 'none';
             operationUI.style.display = 'flex';
-            progress.style.display = 'block';
         } else {
             settingsPanel.style.display = 'block';
             operationUI.style.display = 'none';
-            progress.style.display = 'none';
         }
     });
-
-    // 設定値の変更を監視
-    attachToRecord.addEventListener('change', (e) => {
-        SETTINGS.attachToRecord = e.target.checked;
-        updateUI();
-        saveWidgetSettings(WidgetKey);
-    });
-
-    attachFormat.addEventListener('change', (e) => {
-        SETTINGS.attachFormat = e.target.value;
-        updateUI();
-        saveWidgetSettings(WidgetKey);
-    });
-
-    download.addEventListener('change', (e) => {
-        SETTINGS.download = e.target.checked;
-        updateUI();
-        saveWidgetSettings(WidgetKey);
-    });
-
-    downloadFormat.addEventListener('change', (e) => {
-        SETTINGS.downloadFormat = e.target.value;
-        updateUI();
-        saveWidgetSettings(WidgetKey);
-    });
-
-    createAsSheets.addEventListener('change', (e) => {
-        SETTINGS.createAsSheets = e.target.checked;
-        saveWidgetSettings(WidgetKey);
-    });
-
-    updateUI();
+    renderTemplateList();
 }
 
 async function loadWidgetSettings(key){
@@ -190,6 +207,31 @@ async function loadWidgetSettings(key){
         if (!SETTINGS.SheetTemplateUrl) {
             SETTINGS.SheetTemplateUrl = [{name:'', url:''}];
         }
+        // 古い設定の移行
+        SETTINGS.SheetTemplateUrl.forEach(template => {
+            if (template.createAsSheets !== undefined) {
+                delete template.createAsSheets;
+            }
+            if (template.attachFormat === 'xlsx') {
+                template.attachFormat = 'excel';
+            }
+            if (template.downloadFormat === 'xlsx') {
+                template.downloadFormat = 'excel';
+            }
+            if (template.attachFormat === 'url') {
+                template.attachFormat = 'zohosheet';
+            }
+            if (template.downloadFormat === 'url') {
+                template.downloadFormat = 'zohosheet';
+            }
+            // 添付形式のcombinedオプションを通常のフォーマットに変換
+            if (template.attachFormat === 'excel_combined') {
+                template.attachFormat = 'excel';
+            }
+            if (template.attachFormat === 'zohosheet_combined') {
+                template.attachFormat = 'zohosheet';
+            }
+        });
         initializeSettingsUI();
 	}
 }

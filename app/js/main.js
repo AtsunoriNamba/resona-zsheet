@@ -35,7 +35,7 @@ window.onload = async function(){
 			elm.innerHTML = templateOptionHtml
 		}
 		
-		ZOHO.CRM.UI.Resize({height:"200", width:"540"})
+		ZOHO.CRM.UI.Resize({height:"300", width:"900"})
 
 		ENTITY = data.Entity
 		ENTITY_IDS = data.EntityId

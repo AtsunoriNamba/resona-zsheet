@@ -47,7 +47,7 @@
 	margin-right: 0;
 }
 .form-check-label {
-	margin-right: 24px;
+	margin-right: 8px;
 }
 .buttonArea {
 	width: 100%;
@@ -283,7 +283,7 @@
 }
 
 .form-select-sm {
-	margin: 0 0 8px 24px;
+	margin: 0 0 8px 0px;
 	width: auto;
 	min-width: 120px;
 	padding: 4px 24px 4px 8px;

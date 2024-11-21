@@ -101,7 +101,7 @@ window.onload = async function(){
 		for(let idx in data.EntityId){
 			let recordData = await Z.getRecord(ENTITY, data.EntityId[idx])
 			if(IP == "61.200.96.103"){ fileNameAddition += "TEST" }
-			let WorkbookName = `${recordData.Name}_${recordData.field5.name}`
+			let WorkbookName = `${recordData.Name}_${recordData.Deals.name}`
 
 			let createBookRes = await createSheetFromTemplate(WorkbookName, zSheetTemplate)
 			createdWorkbookId = createBookRes.details.statusMessage.resource_id

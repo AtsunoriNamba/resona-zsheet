@@ -19,7 +19,7 @@ async function generateSheet(workbookid, moduleApiName, recordId = [], forceGath
 		let record = await Z.getRecord(moduleApiName, rId)
 		let newSheetName
 
-		newSheetName = `${record.Name}-${record.field5.name}`
+		newSheetName = `${record.Name}-${record.Deals.name}`
 
 		//テンプレートにするシートの選択
 		let templateSheetId

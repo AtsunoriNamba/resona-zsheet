@@ -13,26 +13,29 @@ window.onload = async function(){
 		TEMPLATE_CRMVAR = 
 		await waitFor("#loadCheck")
 
-		let templateUrl
-
 		// debugger
 		document.querySelector("#operation-ui").style.display = "block"
 
-
 		templateSelectoerSetup(SETTINGS.SheetTemplateUrl, document.querySelector("#invTemplateSelect"))
 
-
 		function templateSelectoerSetup(v, elm){
-			// debugger
-			let variable = v
-			let zTemplateName
-			let templateOptionHtml = ""
+			let templateCheckboxHtml = ""
 			for(let entry of v){
-				zTemplateName = entry.name
-				zSheetTemplate = entry.url
-				templateOptionHtml += `<option value="${zSheetTemplate}">${zTemplateName}</option>`
+				const id = `template-${v.indexOf(entry)}`
+				templateCheckboxHtml += `
+					<div class="template-checkbox-item">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" 
+								value="${entry.url}" 
+								data-index="${v.indexOf(entry)}"
+								id="${id}">
+							<label class="form-check-label" for="${id}">
+								${entry.name}
+							</label>
+						</div>
+					</div>`
 			}
-			elm.innerHTML = templateOptionHtml
+			elm.innerHTML = templateCheckboxHtml
 		}
 		
 		ZOHO.CRM.UI.Resize({height:"300", width:"900"})
@@ -52,11 +55,9 @@ window.onload = async function(){
 		}
 		
 		initOperationUI()
-
 	})
 
-	ZOHO.embeddedApp.init();
-	// loadHtml("https://air.southernwave.net/ZohoWidgetDevelopment/RecordToExcel/widget.html")
+	ZOHO.embeddedApp.init()
 
 	function addWorkbookLink(workbookName, workbookUrl) {
 		const linksContainer = document.getElementById('workbookLinks')
@@ -88,47 +89,71 @@ window.onload = async function(){
 		generateBtnInProgress.innerHTML = '完了'
 	}
 
-	async function createZohoSheetDocuments(data){
-		// プログレスバーの初期化
-		initProgress(data.EntityId.length)
+	async function createZohoSheetDocuments(data) {
+		try {
+			// UIの更新
+			document.getElementById("generateBtnText").style.display = "none"
+			document.getElementById("generateBtnInProgress").style.display = "block"
+			document.getElementById("generateBtn").setAttribute("disabled", true)
 
-		document.getElementById("generateBtnText").style.display = "none"
-		document.getElementById("generateBtnInProgress").style.display = "block"
-		document.getElementById("generateBtn").setAttribute("disabled", true)
+			// 選択されたテンプレートの設定を取得
+			const templateContainer = document.getElementById("invTemplateSelect")
+			const selectedTemplates = Array.from(templateContainer.querySelectorAll('input[type="checkbox"]:checked'))
+				.map(checkbox => ({
+					index: checkbox.dataset.index,
+					url: checkbox.value
+				}))
 
-		//Sheetテンプレートから新規作成
-		// debugger
-		for(let idx in data.EntityId){
-			let recordData = await Z.getRecord(ENTITY, data.EntityId[idx])
-			if(IP == "61.200.96.103"){ fileNameAddition += "TEST" }
-			let WorkbookName = `${recordData.Name}_${recordData.Deals.name}`
+			if (selectedTemplates.length === 0) {
+				throw new Error('テンプレートが選択されていません')
+			}
 
-			let createBookRes = await createSheetFromTemplate(WorkbookName, zSheetTemplate)
-			createdWorkbookId = createBookRes.details.statusMessage.resource_id
-			workbookUrl = createBookRes.details.statusMessage.workbook_url
+			// プログレスバーの初期化（テンプレート数 × レコード数）
+			initProgress(data.EntityId.length * selectedTemplates.length)
 
-			WORKING_BOOK_ID = createdWorkbookId
+			let allResults = { downloads: [] }
 
-			//SheetをWorkDriveに移動
-			// if(IP != "61.200.96.103"){
-				// レプロ
-				// let mvRes = await moveFile(createdWorkbookId, directoryId)
-			// }
+			// 各テンプレートを順次処理
+			for (const template of selectedTemplates) {
+				const templateSettings = SETTINGS.SheetTemplateUrl[template.index]
+				const results = await processTemplate(templateSettings, data.EntityId, template.url)
+				allResults.downloads = allResults.downloads.concat(results.downloads)
+			}
+
+			// 結果の表示
+			if (allResults.downloads.length > 0) {
+				allResults.downloads.forEach(download => {
+					addWorkbookLink(download.fileName, download.fileUrl)
+				})
+			}
+
+			// 処理完了時の表示更新
+			completeProgress()
+			document.getElementById("closeBtnArea").style.display = "flex"
+			document.getElementById("closeBtn").addEventListener("click", function() {
+				ZOHO.CRM.UI.Popup.close()
+			})
+
+		} catch (error) {
+			console.error('Document creation failed:', error)
 			
-			let worksheets = await ZS.getWorksheetList(createdWorkbookId)
-			//debugger
-			await generateSheet(WORKING_BOOK_ID, ENTITY, [data.EntityId[idx]])
+			// エラー表示
+			const generateBtn = document.getElementById("generateBtn")
+			const generateBtnText = document.getElementById("generateBtnText")
+			const generateBtnInProgress = document.getElementById("generateBtnInProgress")
 			
-			// リンクを追加
-			addWorkbookLink(WorkbookName, workbookUrl)
+			generateBtnText.style.display = "block"
+			generateBtnText.textContent = "エラーが発生しました"
+			generateBtnText.style.color = "red"
+			generateBtnInProgress.style.display = "none"
+			generateBtn.classList.remove("btn-primary")
+			generateBtn.classList.add("btn-danger")
+
+			// エラーメッセージの表示
+			const errorMessage = document.getElementById("errorMessage")
+			errorMessage.textContent = error.message
+			errorMessage.style.display = "block"
 		}
-	
-		// 処理完了時の表示更新
-		completeProgress()
-		document.getElementById("closeBtnArea").style.display = "flex"
-		document.getElementById("closeBtn").addEventListener("click", function() {
-			ZOHO.CRM.UI.Popup.close()
-		})
 	}
 
 	async function getFieldInfo(module_apiName){
@@ -139,6 +164,7 @@ window.onload = async function(){
 			return FIELDS[module_apiName]
 		}
 	}
+
 	async function getRelatedListInfo(module_apiName){
 		if(typeof RELATED_LISTS[module_apiName] === "undefined"){
 			RELATED_LISTS[module_apiName] = (await ZOHO.CRM.META.getRelatedList({Entity:module_apiName})).related_lists
@@ -147,7 +173,6 @@ window.onload = async function(){
 			return RELATED_LISTS[module_apiName]
 		}
 	}
-
 
 	function waitFor(selector) {
 		return new Promise(function (res, rej) {
@@ -165,13 +190,10 @@ window.onload = async function(){
 		});
 	}
 
-
 	function initOperationUI(){
 		let genBtn = document.getElementById("generateBtn")
 		genBtn.addEventListener("click", function(){
-			zSheetTemplate = document.getElementById("invTemplateSelect").value
 			createZohoSheetDocuments(widgetData)
 		})
 	}
-
 }

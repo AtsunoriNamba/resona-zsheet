@@ -1,3 +1,7 @@
+/*
+ * Version: 1.3.2
+ * Update: ダウンロードAPIのパラメータ形式を修正
+ */
 //レコード情報キャッシュ用オブジェクト
 Z = {
 	records:{},
@@ -74,12 +78,6 @@ Z = {
 		apiCounter("ZOHO.CRM.API.getFields")
 		//console.log(`ZOHO.CRM.META.getFields({Entity:${entity}, RelatedList:${subform}})`)
 		let res = await ZOHO.CRM.META.getFields({Entity:subform})
-		// let result = await ZOHO.CRM.CONNECTION.invoke("crmapiconnection",{
-		// 	"url": `https://www.zohoapis.jp/crm/v4/${zApiScheduleTab}?ids=${deteleScheduleIds.join(",")}`,
-		// 	"method" : "DELETE",
-		// 	"param_type" : 1
-		// })
-
 	},
 
 	getAllRecords:async function(entity){
@@ -153,7 +151,6 @@ ZS = {
 					console.log(parameters)
 					console.log(result)
 					if(!result.details || result.details.statusMessage.error_code){
-						// debugger
 						if(result.details.statusMessage.error_code == "2950"){
 							alert("APIの呼び出し回数が上限に達しました。処理件数を減らして再度実行してください。")
 							ZOHO.CRM.UI.Popup.close()
@@ -164,21 +161,6 @@ ZS = {
 							ZOHO.CRM.UI.Popup.close()
 							return
 						}
-						// console.log(`## Api Result -> ${JSON.stringify(result)} ##`)
-						// console.log(`## Wait -> ${JSON.stringify(parameters)} ##`)
-						// if(!ZS.timer.onmessage){
-						// 	let counter = 0
-						// 	ZS.timer.onmessage = async function(e) {
-						// 		console.log(`## Waiting... ${counter*10}sec`)
-						// 		if(counter > 31){
-						// 			console.log(`## Retry -> ${JSON.stringify(parameters)} ##`)
-						// 			let r = await ZS.zsApi(url, method, param_type, parameters)
-						// 			resolve(r)
-						// 		}
-						// 		counter++
-						// 	}
-						// }
-						// ZS.timer.postMessage(10000);
 					}else{
 						resolve( result.details.statusMessage )
 					}
@@ -198,26 +180,8 @@ ZS = {
 		if(ZS.sheetContents[wbid]?.[wsid] && force != true){ return ZS.sheetContents[wbid][wsid] }
 		if(!ZS.sheetContents[wbid]){ ZS.sheetContents[wbid] = {} }
 		if(!ZS.sheetContents[wbid][wsid]){ ZS.sheetContents[wbid][wsid] = {} }
-		// //使用範囲を取得
-		// console.log(`worksheet.usedarea -> ${wbid}.${wsid}`)
-		// let result = await ZS.zsApi(
-		// 	`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
-		// 	{
-		// 		method:"worksheet.usedarea",
-		// 		worksheet_id:wsid
-		// 	}
-		// )
-		// maxCol = result.used_column_index
-		// maxRow = result.used_row_index
 
-		//プログレスバーの設定
-		// progressAddTask( maxRow * maxCol )
-		// perCellProgressStep = perSheetProgressStep / ( maxRow * maxCol )
-
-
-		//使用範囲のコンテンツを取得
 		apiCounter("worksheet.content.get")
-		//console.log(`worksheet.content.get -> ${wbid}.${wsid}`)
 		result = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{
@@ -265,7 +229,6 @@ ZS = {
 		if(ZS.sheetNames[wbid] && force != true){ return ZS.sheetNames[wbid] }
 		if(!ZS.sheetNames[wbid]){ ZS.sheetNames[wbid] = {} }
 		apiCounter("worksheet.list")
-		// console.log(`worksheet.list -> ${wbid}`)
 		let res = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{ method:"worksheet.list" }
@@ -277,7 +240,6 @@ ZS = {
 	},
 	deleteRows: async function(wbid,wsid,rows){
 		apiCounter("worksheet.rows.delete")
-		//console.log(`worksheet.rows.delete -> ${wbid}.${wsid}`)
 		let result = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{
@@ -290,7 +252,6 @@ ZS = {
 	},
 	updateSheetViaCsv: async function(wbid,wsid,csv){
 		apiCounter("worksheet.csvdata.set")
-		//console.log(`worksheet.csvdata.set -> ${wbid}.${wsid}`)
 		let result = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{
@@ -309,7 +270,6 @@ ZS = {
 	copySheet: async function(wbid,origWsid,newWsName){
 		if(ZS.copySheetApiCount == 30){
 			apiCounter("workbook.copy")
-			//console.log(`workbook.copy -> ${wbid}.${origWsid}.${newWsName}`)
 			let result = await ZS.zsApi(
 				`https://sheet.zoho.jp/api/v2/copy`,"POST",1,
 				{
@@ -324,7 +284,6 @@ ZS = {
 			await deleteFile(wbid)
 		}
 		apiCounter("worksheet.copy")
-		// console.log(`worksheet.copy -> ${wbid}.${origWsid}.${newWsName}`)
 		let result = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{
@@ -341,13 +300,53 @@ ZS = {
 	deleteSheet: async function(wbid,wsid){
 		ZS.sheetContents[wbid][wsid] = null
 		apiCounter("worksheet.delete")
-		// console.log(`worksheet.delete -> ${wbid}.${wsid}`)
 		let result = await ZS.zsApi(
 			`https://sheet.zoho.jp/api/v2/${wbid}`,"POST",1,
 			{
 				method:"worksheet.delete",
 				worksheet_id:wsid
 			}
+		)
+		return result
+	},
+
+	// PDF出力 (APIドキュメント参照: https://www.zoho.com/sheet/help/api/v2/#WORKBOOK-Download-workbook)
+	exportToPDF: async function(wbid) {
+		apiCounter("workbook.download.pdf")
+
+		let result = await ZOHO.CRM.CONNECTION.invoke("zohooauth",{
+			"url": `https://sheet.zoho.jp/api/v2/download/${wbid}?method=workbook.download`,
+			"method" : "POST",
+			"param_type" : 1,
+			"parameters" :{
+				// method:"workbook.download",
+				format:"pdf",
+				page_settings:{
+					print_type:"WORKBOOK",
+					scale:3,
+					add_gridlines:false,
+					add_button:false,
+					add_image:true,
+					align_vcenter:false,
+					align_hcenter:true,
+					margin_left:0,
+					margin_right:0,
+					margin_top:0.25,
+					margin_bottom:0.25,
+				}
+			},
+			"RESPONSE_TYPE":"stream"
+		})
+		return result
+	},
+	// Excel出力
+	exportToExcel: async function(wbid) {
+		apiCounter("workbook.download.xlsx")
+		const result = await ZS.zsApi(
+			`https://sheet.zoho.jp/api/v2/download/${wbid}?method=workbook.download`,
+			"POST",
+			2,
+			`format=xlsx`
 		)
 		return result
 	}
@@ -362,7 +361,19 @@ function apiCounter(api){
 	console.log(`## API ## ${api} : ${API_COUNT[api]}`)
 }
 
-async function createSheetFromTemplate(workbookName, templateId){
+async function createSheetFromTemplate(workbookName, templateUrl){
+    let templateId = '';
+    if (templateUrl.includes('/')) {
+        let parts = templateUrl.split('/');
+        let lastPart = parts.pop();
+
+        if (lastPart.includes('?')) {
+            templateId = lastPart.split('?')[0];
+        } else {
+            templateId = lastPart;
+        }
+    }
+
 	let res = await ZOHO.CRM.CONNECTION.invoke("zohooauth",{
 		"url": "https://sheet.zoho.jp/api/v2/createfromtemplate",
 		"method" : "POST",
